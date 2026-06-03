@@ -45,6 +45,15 @@ Projects that officially ship or integrate ADHD:
 | Project | What they did | Status |
 |---|---|---|
 | [**repowire**](https://github.com/prassanna-ravishankar/repowire) | Ported ADHD onto repowire's mesh-orchestrator primitives — frames become frame-shifted temp peers, generator/critic split maps to separate peers vs. the orchestrator's turn. Ships in the default orchestrator template. ([PR #313](https://github.com/prassanna-ravishankar/repowire/pull/313)) | ✅ Merged · MIT attribution |
+| [**mstack**](https://github.com/mayank-io/mstack) | Vendored ADHD as the `think` plugin in their Claude plugin marketplace — wires the divergent-then-converge loop into mstack for architecture, naming, API design, and fuzzy debugging. | ✅ Shipped · MIT attribution |
+| [**zk-flow-oss**](https://github.com/matt-metivier/zk-flow-oss) | Adapted ADHD's `IDEATION_FRAMES` into their critique workflow ([`src/workflows/critique.src.js`](https://github.com/matt-metivier/zk-flow-oss/blob/main/src/workflows/critique.src.js)) as a pre-pass to reduce anchoring bias before review. | ✅ Shipped · MIT attribution |
+| [**han**](https://github.com/testdouble/han) | Published an [evidence-based research application](https://github.com/testdouble/han/blob/adhd-swarm-research/docs/research/adhd-application-to-han.md) of ADHD onto Han's plugin model — 11 sources, 8 validation rounds. Findings landed as issues [#16](https://github.com/UditAkhourii/adhd/issues/16)–[#18](https://github.com/UditAkhourii/adhd/issues/18). | ✅ Research integration |
+| [**app-library** (yslee5005)](https://github.com/yslee5005/app-library) | Built an `expert-thinker` MoAI agent on the ADHD pattern — tree-of-thought with isolated divergence and a separate critic pass. | ✅ Shipped |
+| [**striatum**](https://github.com/halbritt/striatum) | Installer scaffold for Claude Code recommends `npx skills add UditAkhourii/adhd` for architecture, API design, and naming work. | ✅ Shipped |
+| [**awesome-prompts**](https://github.com/ai-boost/awesome-prompts) | Packaged the ADHD loop as a standalone prompt (`adhd_parallel_ideation_skill.txt`) for users without the skill installed. | ✅ Shipped |
+| [**nix-skills**](https://github.com/sudosubin/nix-skills) | Nix packaging of the ADHD skill (pinned to commit `770834e`) for the Nix-based agent-skills ecosystem. | ✅ Shipped |
+| [**caioniehues/adhd**](https://github.com/caioniehues/adhd) | Fork with a customized `SKILL.md` that re-points install + docs to their own distribution while keeping upstream attribution. | ✅ Fork · attribution |
+| [**ktg-one/adhd**](https://github.com/ktg-one/adhd) | Fork used as a personal "codified model of how my brain works" — wired into the [may-2026-kb](https://github.com/ktg-one/may-2026-kb) knowledge base as a cognitive-architecture pattern. | ✅ Fork · in use |
 
 Shipping ADHD in your project? Open a PR adding it here, or [open an issue](https://github.com/UditAkhourii/adhd/issues/new) and we'll add you.
 
