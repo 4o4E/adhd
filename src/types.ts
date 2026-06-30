@@ -53,7 +53,10 @@ export type RunOptions = {
   topK?: number;                       // how many to deepen, default 3
   concurrency?: number;                // parallel branches, default 4
   codeMode?: boolean;                  // bias frames toward engineering
-  model?: string;                      // override SDK model
+  model?: string;                      // override SDK model (generator + critic)
+  criticModel?: string;                // override model for the critic passes
+                                       // (score + cluster) only; falls back to `model`.
+                                       // Use a different family to decorrelate critic errors.
   onEvent?: (e: RunEvent) => void;     // stream progress to caller/CLI
 };
 

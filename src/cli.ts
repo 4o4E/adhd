@@ -22,6 +22,7 @@ type Flags = {
   json: boolean;
   quiet: boolean;
   model?: string;
+  criticModel?: string;
 };
 
 function parse(argv: string[]): Flags {
@@ -36,6 +37,7 @@ function parse(argv: string[]): Flags {
       case "--concurrency": f.concurrency = Number(argv[++i]); break;
       case "--context": f.context = readFileSync(argv[++i], "utf8"); break;
       case "--model": f.model = argv[++i]; break;
+      case "--critic-model": f.criticModel = argv[++i]; break;
       case "--no-code-mode": f.codeMode = false; break;
       case "--json": f.json = true; break;
       case "--quiet": f.quiet = true; break;
@@ -68,7 +70,9 @@ FLAGS
   --top N           how many to deepen / focus on (default 3)
   --concurrency N   max parallel LLM calls (default 4)
   --context PATH    file to inject as context (code, constraints, stack)
-  --model NAME      override the SDK model
+  --model NAME      override the SDK model (generator + critic)
+  --critic-model N  override the model for the critic passes only
+                    (score + cluster); decorrelates critic errors
   --no-code-mode    don't bias frames toward engineering
   --json            emit RunResult as JSON
   --quiet           suppress progress events
@@ -105,6 +109,7 @@ async function main() {
     concurrency: flags.concurrency,
     codeMode: flags.codeMode,
     model: flags.model,
+    criticModel: flags.criticModel,
     onEvent,
   };
 

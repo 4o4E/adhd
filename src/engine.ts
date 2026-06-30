@@ -238,8 +238,13 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     concurrency = 4,
     codeMode = true,
     model,
+    criticModel,
     onEvent,
   } = opts;
+
+  // The critic (score + cluster) can run on a different model from the
+  // generator to decorrelate errors. Defaults to the generator model.
+  const critic = criticModel ?? model;
 
   const frames = selectFrames(framesPerRun, codeMode);
   const limit = pLimit(concurrency);
@@ -260,8 +265,8 @@ export async function run(opts: RunOptions): Promise<RunResult> {
 
   // PHASE 2 — SCORE + CLUSTER. Critic comes back online.
   const [scoreMap, clusters] = await Promise.all([
-    scoreIdeas(problem, allIdeas, model),
-    clusterIdeas(problem, allIdeas, model),
+    scoreIdeas(problem, allIdeas, critic),
+    clusterIdeas(problem, allIdeas, critic),
   ]);
   for (const i of allIdeas) i.score = scoreMap.get(i.id);
   // Stamp cluster label onto each idea for nicer rendering.
