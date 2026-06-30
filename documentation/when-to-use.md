@@ -43,8 +43,25 @@ Honest numbers. A default run is roughly:
 - 1 clustering call
 - K deepen calls (default 3)
 
-≈ **10 LLM calls per run**, 5–10× a single-shot baseline. Latency depends on concurrency; 30–90s wall clock is typical.
+That is ≈ **N + K + 2 calls** (≈10 at defaults). But **call count is the wrong unit** — token cost is what you pay, and it is dominated by *context that gets re-loaded on every branch*, not by the novel output.
 
-Frame it as: **$0.30 to widen a $50k architecture decision.** Don't run it on every keystroke. Run it at decision points.
+### The honest cost formula
 
-> Note: the per-run cost depends on your base context. Inside a Claude Code session with a large `CLAUDE.md` + tool context, each of the N branches re-loads that base substrate, so real token cost is closer to `N × (base + branch)`. See [issue #8](https://github.com/UditAkhourii/adhd/issues/8).
+Each divergence branch is a fresh, isolated context (that isolation is the whole point — see [how it works](./how-it-works.md)). So the base substrate that prefixes every call — your `CLAUDE.md`, state files, and tool context inside a Claude Code session — is paid **once per branch**, before a single novel idea token is generated:
+
+```
+cost ≈ N × (base_context + branch_output)   ← divergence
+     + critic_context                        ← score + cluster see all N×k ideas
+     + K × deepen_context                    ← focus passes
+```
+
+The `N ×` multiplier on `base_context` is the part the simple "10 calls" framing hides. If the base substrate is ~26K tokens, five branches re-load ~130K tokens of substrate **before** any divergence — that is the real floor, and it scales with `N`, not with how much the model actually says.
+
+### Substrate matters more than call count
+
+- **Standalone library** (`adhd "..."`): minimal substrate. Each branch carries only the problem + frame prompt, so `base_context` is small and the premium is modest — close to the naive 5–10× figure.
+- **Skill inside a Claude Code session**: large substrate. Every branch re-loads `CLAUDE.md` + tool context, so the premium is **meaningfully higher** than the library and grows with your session's base context. Budget for `N × base`, not `1 × base`.
+
+### Rule of thumb
+
+Frame it as: **a few cents to a few dollars to widen a high-stakes decision** — the exact figure depends on `N`, your base substrate, and current API pricing, so compute it for your own setup rather than trusting a single headline number. The mental model holds regardless: cheap relative to shipping the wrong obvious answer. Don't run it on every keystroke. Run it at decision points.

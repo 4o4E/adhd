@@ -277,7 +277,7 @@
 
 <h2 id="impl">Implementation</h2>
 
-<p>We implement ADHD as a Node/TypeScript library on top of the Claude Agent SDK<sup class="cite"><a href="#ref-sdk">[8]</a></sup>. The package ships a CLI (<code>adhd "&lt;problem&gt;"</code>), a programmatic API (<code>run(opts) → RunResult</code>), and a frame library that is extensible in five lines per frame. A default run uses <em>N</em> = 5 frames, <em>k</em> = 6 ideas per frame, <em>K</em> = 3 deepened survivors, concurrency 4. Total LLM calls per run: <em>N</em> divergences + 1 score + 1 cluster + <em>K</em> deepens ≈ 10.</p>
+<p>We implement ADHD as a Node/TypeScript library on top of the Claude Agent SDK<sup class="cite"><a href="#ref-sdk">[8]</a></sup>. The package ships a CLI (<code>adhd "&lt;problem&gt;"</code>), a programmatic API (<code>run(opts) → RunResult</code>), and a frame library that is extensible in five lines per frame. A default run uses <em>N</em> = 5 frames, <em>k</em> = 6 ideas per frame, <em>K</em> = 3 deepened survivors, concurrency 4. Total LLM calls per run: <em>N</em> divergences + 1 score + 1 cluster + <em>K</em> deepens ≈ 10. Call count is a poor proxy for cost, however; see <a href="#cost">Cost</a> for the substrate-multiplied token accounting.</p>
 
 <p>Each phase uses a system prompt tuned for its posture. Divergence prompts begin with <em>"You are in DIVERGENT mode. You are a generator, not a critic"</em> and enumerate constraints (JSON only, no prose, no ranking, the first three obvious answers are banned, push past them). The scoring prompt begins with <em>"You are in CONVERGENT mode. You are now the critic"</em> and supplies the rubric. The deepen prompt begins with <em>"You are in FOCUS mode"</em>. These prompts are designed to be self-evidently incompatible, so the model cannot drift between them within a single call.</p>
 
@@ -341,8 +341,10 @@
 
 <p>This matches the failure mode we expect. When the problem is <em>well-understood with a known good answer</em>, a single polished answer beats a wide set with the same answer buried in it. ADHD pays its cost in presentation overhead; that cost is worth it precisely when the wide set <em>contains</em> ideas the polished answer missed. On <em>llm-hang-cli</em> the baseline already knew the right answer; on the other five problems it did not.</p>
 
-<h3>Cost</h3>
-<p>A default ADHD run uses ≈10 LLM calls (5 divergence + 1 score + 1 cluster + 3 deepen) versus 1 for the baseline. Wall-clock latency at concurrency 4 is typically 30–90 s. We frame this honestly: ADHD is for decision points, not inner loops. The right mental model is <em>spend US$0.30 to widen a US$50k architecture decision</em>.</p>
+<h3 id="cost">Cost</h3>
+<p>A default ADHD run uses ≈10 LLM calls (5 divergence + 1 score + 1 cluster + 3 deepen) versus 1 for the baseline. Wall-clock latency at concurrency 4 is typically 30–90 s. <em>Call count, however, understates token cost.</em> Because each divergence branch is an isolated context, the base substrate that prefixes every call (system prompt, and — when ADHD runs as a skill inside an agent session — the host's context and tool definitions) is paid once <em>per branch</em>, before any divergence token is generated. The honest cost is therefore</p>
+<p style="text-align:center"><em>cost ≈ N × (base_context + branch_output) + critic_context + K × deepen_context</em>,</p>
+<p>where the <em>N ×</em> multiplier on <em>base_context</em> dominates whenever the substrate is large. Two regimes follow: the <strong>standalone library</strong> carries a minimal substrate (problem + frame only), so its premium is close to the naive 5–10× call ratio; the <strong>skill-inside-an-agent</strong> regime re-loads the host substrate on every branch, so its premium is higher and grows with <em>N</em>. We frame this honestly: ADHD is for decision points, not inner loops. The right mental model is <em>spend a small, computable token premium to widen a high-stakes decision</em> — the dollar figure depends on <em>N</em>, the base substrate, and current per-token pricing, and should be computed per deployment rather than quoted as a single headline number.</p>
 
 <h2 id="discussion">Discussion and limitations</h2>
 
