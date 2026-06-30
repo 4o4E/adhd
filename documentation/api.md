@@ -24,7 +24,8 @@ adhd "..." --json > result.json
 | `--top N` | 3 | how many to deepen / focus |
 | `--concurrency N` | 4 | max parallel LLM calls |
 | `--context PATH` | — | inject a file as context (code, stack, constraints) |
-| `--model NAME` | SDK default | override model |
+| `--model NAME` | SDK default | override model (generator + critic) |
+| `--critic-model NAME` | = `--model` | override model for the critic passes only (score + cluster) — use a different family to decorrelate critic errors |
 | `--no-code-mode` | — | don't bias frames toward engineering |
 | `--json` | — | emit machine-readable `RunResult` |
 | `--quiet` | — | suppress progress events |
@@ -46,7 +47,8 @@ type RunOptions = {
   topK?: number;           // default 3
   concurrency?: number;    // default 4
   codeMode?: boolean;      // default true
-  model?: string;
+  model?: string;          // generator + critic
+  criticModel?: string;    // critic (score + cluster) only; defaults to `model`
   onEvent?: (e: RunEvent) => void;
 };
 ```
