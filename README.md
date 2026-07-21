@@ -220,6 +220,7 @@ Also: [SKILL.md](./skills/adhd/SKILL.md) (the runnable skill) · [SOURCE-SPEC.md
 ## External reviews
 
 - [**Han plugin compatibility analysis**](https://github.com/testdouble/han/blob/adhd-swarm-research/docs/research/adhd-application-to-han.md) by [@mxriverlynn](https://www.reddit.com/user/mxriverlynn) — evidence-based review using Han's own `/research` skill, 11 sources, 8 validation rounds. Findings tracked as issues [#16](https://github.com/UditAkhourii/adhd/issues/16), [#17](https://github.com/UditAkhourii/adhd/issues/17), [#18](https://github.com/UditAkhourii/adhd/issues/18).
+- [**A measured duel vs. single-shot**](https://miyagadget.page/en/blog/2026/06/03/adhd-coding-agent-skill-en/) by Shichinomiya ([@shichinomiya_s](https://miyagadget.page)) — independent blind-scored benchmark (2 problems, LLM-as-judge, A/B positions swapped). ADHD won both, with the biggest gains in novelty (4.5→9.0) and trap detection (5.0→9.0), at a real cost of ~2.3× time and ~1.9× output.
 
 ---
 
