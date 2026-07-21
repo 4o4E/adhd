@@ -205,8 +205,14 @@ Also: [SKILL.md](./skills/adhd/SKILL.md) (the runnable skill) · [SOURCE-SPEC.md
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=uditakhourii%2Fadhd&type=date&legend=top-left">
-  <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=uditakhourii/adhd&type=date&legend=top-left" style="background:#ffffff" />
+## Star History
+
+<a href="https://www.star-history.com/?repos=UditAkhourii%2Fadhd&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=UditAkhourii/adhd&type=date&theme=dark&legend=top-left&sealed_token=_61--Q_Ev0_B7e-nUMAMTCYQJixOhQGyQyXO-6nA_AKqyBlPVkAOPJaoKq2mnzIhIP77I4hbSo1TdytVtrd5vNQHAN3-aL5Zn-KTGh1-AYEV77E68uZChA" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=UditAkhourii/adhd&type=date&legend=top-left&sealed_token=_61--Q_Ev0_B7e-nUMAMTCYQJixOhQGyQyXO-6nA_AKqyBlPVkAOPJaoKq2mnzIhIP77I4hbSo1TdytVtrd5vNQHAN3-aL5Zn-KTGh1-AYEV77E68uZChA" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=UditAkhourii/adhd&type=date&legend=top-left&sealed_token=_61--Q_Ev0_B7e-nUMAMTCYQJixOhQGyQyXO-6nA_AKqyBlPVkAOPJaoKq2mnzIhIP77I4hbSo1TdytVtrd5vNQHAN3-aL5Zn-KTGh1-AYEV77E68uZChA" />
+ </picture>
 </a>
 
 ---
