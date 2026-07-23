@@ -24,6 +24,9 @@ export function renderText(r: RunResult): string {
   const out: string[] = [];
 
   out.push(bold("Problem: ") + r.problem);
+  if (r.reframe) {
+    out.push(dim(`Reframed for divergence: ${r.reframe}`));
+  }
   out.push("");
 
   // Wide set, by cluster.

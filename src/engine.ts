@@ -51,6 +51,12 @@ const DeepenSchema = z.object({
   ),
 });
 
+const ReframeSchema = z.object({
+  reframed: z.string(),
+  changed: z.boolean(),
+  note: z.string().optional(),
+});
+
 const DIVERGE_SYSTEM = `You are in DIVERGENT mode. You are a generator, not a critic.
 Rules:
 - Output a JSON array only. No prose before/after.
@@ -76,6 +82,25 @@ const CLUSTER_SYSTEM = `You group ideas into 3-6 clusters by their UNDERLYING AN
 "remove-the-server plays", "push-work-to-client plays", "cache-shaped plays".
 Output JSON only.`;
 
+const REFRAME_SYSTEM = `You strip load-bearing anchors from a problem statement before divergent
+brainstorming. An anchor is an incidental implementation detail (a specific
+tech stack, an existing tool name, the current architecture) that isn't a
+real constraint but silently narrows every downstream idea to variations on
+what's already there.
+
+Rules:
+- Keep anchors that are genuine immutable constraints: compliance/legal
+  requirements, hard budget or time limits, physical/protocol constraints,
+  anything the user would reject an answer for violating.
+- Strip anchors that are just "how it happens to be built today" — current
+  database, current framework, current team structure — UNLESS removing
+  them would make the problem meaningless or invite disallowed options.
+- If you strip something, restate the problem as the underlying
+  job-to-be-done, not the current implementation.
+- If nothing needs stripping, return the problem unchanged and set
+  "changed" to false.
+Output JSON only: {"reframed": "...", "changed": true|false, "note": "one clause on what was stripped, omit if unchanged"}`;
+
 const DEEPEN_SYSTEM = `You are in FOCUS mode. Take one promising idea and connect dots:
 - Sketch how it would actually work (4-8 sentences).
 - Name the load-bearing risk.
@@ -83,6 +108,27 @@ const DEEPEN_SYSTEM = `You are in FOCUS mode. Take one promising idea and connec
 - Then generate 3-5 sub-ideas that branch off this one (variations,
   combinations with other domains, things this unlocks).
 Output JSON only.`;
+
+async function reframeProblem(
+  problem: string,
+  context: string | undefined,
+  model: string | undefined,
+): Promise<{ reframed: string; changed: boolean }> {
+  const userPrompt = `PROBLEM:
+${problem}
+
+${context ? `CONTEXT:\n${context}\n\n` : ""}Strip incidental anchors, keep real constraints. Output JSON only.`;
+
+  const raw = await callLLM({ model, systemPrompt: REFRAME_SYSTEM, userPrompt });
+
+  try {
+    const parsed = parseJSON(raw, ReframeSchema);
+    return { reframed: parsed.reframed, changed: parsed.changed };
+  } catch {
+    // Fail open — if the reframe pass breaks, fan out from the original.
+    return { reframed: problem, changed: false };
+  }
+}
 
 async function divergeBranch(
   problem: string,
@@ -260,6 +306,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     topK = 3,
     concurrency = 4,
     codeMode = true,
+    stripAnchors = true,
     model,
     criticModel,
     onEvent,
@@ -269,6 +316,24 @@ export async function run(opts: RunOptions): Promise<RunResult> {
   // generator to decorrelate errors. Defaults to the generator model.
   const critic = criticModel ?? model;
 
+  // PHASE 0 — REFRAME. Strip incidental anchors (current stack, existing
+  // tool names) from the problem statement before it ever reaches a branch.
+  // Every branch otherwise sees the same raw problem, so an anchor buried
+  // in it infects all N branches regardless of branch isolation. Real
+  // constraints (compliance, budget, physical limits) are preserved.
+  // Convergence (score/cluster/deepen) still judges against the ORIGINAL
+  // problem — an idea has to fit the real constraints to be viable.
+  let divergeProblem = problem;
+  let reframe: string | undefined;
+  if (stripAnchors) {
+    const r = await reframeProblem(problem, context, model);
+    if (r.changed && r.reframed.trim().length > 0) {
+      divergeProblem = r.reframed;
+      reframe = r.reframed;
+    }
+    onEvent?.({ kind: "reframe:done", changed: Boolean(reframe) });
+  }
+
   const frames = selectFrames(framesPerRun, codeMode);
   const limit = pLimit(concurrency);
 
@@ -277,7 +342,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     frames.map((f) =>
       limit(async () => {
         onEvent?.({ kind: "frame:start", frameId: f.id, frameLabel: f.label });
-        const b = await divergeBranch(problem, context, f, ideasPerFrame, model);
+        const b = await divergeBranch(divergeProblem, context, f, ideasPerFrame, model);
         onEvent?.({ kind: "frame:done", frameId: f.id, count: b.ideas.length });
         return b;
       }),
@@ -341,6 +406,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
 
   return {
     problem,
+    reframe,
     branches,
     clusters,
     shortlist,

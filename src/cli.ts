@@ -19,6 +19,7 @@ type Flags = {
   top?: number;
   concurrency?: number;
   codeMode: boolean;
+  stripAnchors: boolean;
   json: boolean;
   quiet: boolean;
   model?: string;
@@ -41,7 +42,7 @@ function positiveInt(raw: string, flag: string, max: number): number {
 const MAX_CONTEXT_BYTES = 10 * 1024 * 1024; // 10 MB
 
 function parse(argv: string[]): Flags {
-  const f: Flags = { problem: "", codeMode: true, json: false, quiet: false };
+  const f: Flags = { problem: "", codeMode: true, stripAnchors: true, json: false, quiet: false };
   const rest: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -63,6 +64,7 @@ function parse(argv: string[]): Flags {
       case "--model": f.model = argv[++i]; break;
       case "--critic-model": f.criticModel = argv[++i]; break;
       case "--no-code-mode": f.codeMode = false; break;
+      case "--no-anchor-strip": f.stripAnchors = false; break;
       case "--json": f.json = true; break;
       case "--quiet": f.quiet = true; break;
       case "-h":
@@ -98,6 +100,8 @@ FLAGS
   --critic-model N  override the model for the critic passes only
                     (score + cluster); decorrelates critic errors
   --no-code-mode    don't bias frames toward engineering
+  --no-anchor-strip don't strip incidental anchors (stack, tool names) from
+                    the problem before fan-out; keep the raw problem as-is
   --json            emit RunResult as JSON
   --quiet           suppress progress events
   -h, --help
@@ -115,6 +119,7 @@ async function main() {
 
   const onEvent = flags.quiet ? undefined : (e: RunEvent) => {
     switch (e.kind) {
+      case "reframe:done": if (e.changed) process.stderr.write(`  ↺ anchors stripped from problem\n`); break;
       case "frame:start": process.stderr.write(`  ▸ ${e.frameLabel}…\n`); break;
       case "frame:done":  process.stderr.write(`    ${e.count} ideas (${e.frameId})\n`); break;
       case "score:done":  process.stderr.write(`  scored ${e.total} ideas\n`); break;
@@ -132,6 +137,7 @@ async function main() {
     topK: flags.top,
     concurrency: flags.concurrency,
     codeMode: flags.codeMode,
+    stripAnchors: flags.stripAnchors,
     model: flags.model,
     criticModel: flags.criticModel,
     onEvent,

@@ -27,6 +27,7 @@ adhd "..." --json > result.json
 | `--model NAME` | SDK default | override model (generator + critic) |
 | `--critic-model NAME` | = `--model` | override model for the critic passes only (score + cluster) — use a different family to decorrelate critic errors |
 | `--no-code-mode` | — | don't bias frames toward engineering |
+| `--no-anchor-strip` | — | don't strip incidental anchors (stack, tool names) from the problem before fan-out |
 | `--json` | — | emit machine-readable `RunResult` |
 | `--quiet` | — | suppress progress events |
 
@@ -47,6 +48,7 @@ type RunOptions = {
   topK?: number;           // default 3
   concurrency?: number;    // default 4
   codeMode?: boolean;      // default true
+  stripAnchors?: boolean;  // strip incidental anchors before fan-out, default true
   model?: string;          // generator + critic
   criticModel?: string;    // critic (score + cluster) only; defaults to `model`
   onEvent?: (e: RunEvent) => void;
