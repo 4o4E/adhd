@@ -53,6 +53,10 @@ export type RunOptions = {
   topK?: number;                       // how many to deepen, default 3
   concurrency?: number;                // parallel branches, default 4
   codeMode?: boolean;                  // bias frames toward engineering
+  stripAnchors?: boolean;              // strip incidental anchors (current stack,
+                                       // existing tool names) from the problem before
+                                       // fan-out, default true. Real constraints
+                                       // (compliance, budget, physical limits) are kept.
   model?: string;                      // override SDK model (generator + critic)
   criticModel?: string;                // override model for the critic passes
                                        // (score + cluster) only; falls back to `model`.
@@ -61,6 +65,7 @@ export type RunOptions = {
 };
 
 export type RunEvent =
+  | { kind: "reframe:done"; changed: boolean }
   | { kind: "frame:start"; frameId: string; frameLabel: string }
   | { kind: "frame:done"; frameId: string; count: number }
   | { kind: "score:done"; total: number }
