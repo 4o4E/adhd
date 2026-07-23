@@ -53,6 +53,10 @@ export type RunOptions = {
   topK?: number;                       // how many to deepen, default 3
   concurrency?: number;                // parallel branches, default 4
   codeMode?: boolean;                  // bias frames toward engineering
+  deepenMode?: "idea" | "cluster";     // "idea" (default) deepens the top-K
+                                       // ranked ideas; "cluster" ranks clusters
+                                       // instead and re-diverges inside the
+                                       // top-K clusters for implementation variants
   model?: string;                      // override SDK model (generator + critic)
   criticModel?: string;                // override model for the critic passes
                                        // (score + cluster) only; falls back to `model`.

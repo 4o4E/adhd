@@ -84,6 +84,16 @@ const DEEPEN_SYSTEM = `You are in FOCUS mode. Take one promising idea and connec
   combinations with other domains, things this unlocks).
 Output JSON only.`;
 
+const DEEPEN_CLUSTER_SYSTEM = `You are in FOCUS mode, working at the CLUSTER level, not a single idea.
+You are given a whole cluster of ideas that share an underlying angle.
+- Sketch how the ANGLE would actually work as a real approach (4-8
+  sentences), synthesizing across the cluster rather than picking one member.
+- Name the load-bearing risk of committing to this angle.
+- Name the first concrete step a coder would take.
+- Then generate 3-5 IMPLEMENTATION VARIANTS of this angle — different ways
+  to execute the same underlying idea, not just recombinations of one leaf.
+Output JSON only.`;
+
 async function divergeBranch(
   problem: string,
   context: string | undefined,
@@ -251,6 +261,74 @@ Output JSON:
   return { ideaId: idea.id, sketch: parsed.sketch, childIdeas };
 }
 
+async function deepenCluster(
+  problem: string,
+  cluster: Cluster,
+  members: Idea[],
+  model: string | undefined,
+): Promise<DeepenedIdea> {
+  // Anchor the DeepenedIdea to the cluster's top-scoring member so existing
+  // consumers (render.ts) can still resolve a parent idea to show alongside
+  // the cluster-level sketch.
+  const anchor = [...members].sort(
+    (a, b) => (b.score?.total ?? 0) - (a.score?.total ?? 0),
+  )[0];
+
+  const userPrompt = `PROBLEM:
+${problem}
+
+CLUSTER — ${cluster.label}:
+${members.map((m) => `- ${m.text}`).join("\n")}
+
+Output JSON:
+{
+  "sketch": "4-8 sentences. How the angle works. Load-bearing risk. First concrete step.",
+  "childIdeas": [
+    {"text": "...", "rationale": "implementation variant of this angle"}
+  ]
+}`;
+
+  const raw = await callLLM({
+    model,
+    systemPrompt: DEEPEN_CLUSTER_SYSTEM,
+    userPrompt,
+  });
+
+  let parsed: z.infer<typeof DeepenSchema>;
+  try {
+    parsed = parseJSON(raw, DeepenSchema);
+  } catch {
+    return { ideaId: anchor.id, sketch: "(deepen pass failed to parse)", childIdeas: [] };
+  }
+
+  const childIdeas: Idea[] = parsed.childIdeas.map((c) => ({
+    id: randomUUID(),
+    frameId: anchor.frameId,
+    cluster: cluster.label,
+    text: c.text,
+    rationale: c.rationale,
+    depth: anchor.depth + 1,
+    parentId: anchor.id,
+  }));
+
+  return { ideaId: anchor.id, sketch: parsed.sketch, childIdeas };
+}
+
+// Rank clusters by mean score of their non-trap members. Traps are excluded
+// so one attractive-looking-but-flawed idea doesn't inflate a weak cluster.
+// Exported (pure, no I/O) so it's unit-testable without an LLM call.
+export function rankClusters(clusters: Cluster[], allIdeas: Idea[]): Cluster[] {
+  const byId = new Map(allIdeas.map((i) => [i.id, i]));
+  const score = (c: Cluster): number => {
+    const viable = c.ideaIds
+      .map((id) => byId.get(id))
+      .filter((i): i is Idea => Boolean(i?.score && !i.score.trap));
+    if (viable.length === 0) return -Infinity;
+    return viable.reduce((sum, i) => sum + i.score!.total, 0) / viable.length;
+  };
+  return [...clusters].sort((a, b) => score(b) - score(a));
+}
+
 export async function run(opts: RunOptions): Promise<RunResult> {
   const {
     problem,
@@ -260,6 +338,7 @@ export async function run(opts: RunOptions): Promise<RunResult> {
     topK = 3,
     concurrency = 4,
     codeMode = true,
+    deepenMode = "idea",
     model,
     criticModel,
     onEvent,
@@ -318,17 +397,38 @@ export async function run(opts: RunOptions): Promise<RunResult> {
         )[0];
 
   // PHASE 3 — FOCUS / DEEPEN top-K. This is the "connecting the dots" pass.
-  const toDeepen = ranked.slice(0, topK);
-  const deepened = await Promise.all(
-    toDeepen.map((idea) =>
-      limit(async () => {
-        onEvent?.({ kind: "deepen:start", ideaId: idea.id, text: idea.text });
-        const d = await deepenIdea(problem, idea, allIdeas, model);
-        onEvent?.({ kind: "deepen:done", ideaId: idea.id });
-        return d;
-      }),
-    ),
-  );
+  // "idea" mode (default) goes deep on specific ideas — may miss adjacent
+  // implementation variants that live in the same cluster.
+  // "cluster" mode goes broad-then-deep within the winning angles instead —
+  // ranks clusters, re-diverges inside the top-K to surface variants of the
+  // angle rather than variations of a single leaf.
+  const deepened =
+    deepenMode === "cluster"
+      ? await Promise.all(
+          rankClusters(clusters, allIdeas)
+            .slice(0, topK)
+            .map((c) =>
+              limit(async () => {
+                const members = c.ideaIds
+                  .map((id) => allIdeas.find((i) => i.id === id))
+                  .filter((i): i is Idea => Boolean(i));
+                onEvent?.({ kind: "deepen:start", ideaId: c.label, text: c.label });
+                const d = await deepenCluster(problem, c, members, model);
+                onEvent?.({ kind: "deepen:done", ideaId: c.label });
+                return d;
+              }),
+            ),
+        )
+      : await Promise.all(
+          ranked.slice(0, topK).map((idea) =>
+            limit(async () => {
+              onEvent?.({ kind: "deepen:start", ideaId: idea.id, text: idea.text });
+              const d = await deepenIdea(problem, idea, allIdeas, model);
+              onEvent?.({ kind: "deepen:done", ideaId: idea.id });
+              return d;
+            }),
+          ),
+        );
 
   // One provocation = a wild-tagged frame's lowest-scoring-but-highest-novelty leaf,
   // reframed as a question. Cheap, doesn't need another LLM call.

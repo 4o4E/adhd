@@ -27,6 +27,7 @@ adhd "..." --json > result.json
 | `--model NAME` | SDK default | override model (generator + critic) |
 | `--critic-model NAME` | = `--model` | override model for the critic passes only (score + cluster) — use a different family to decorrelate critic errors |
 | `--no-code-mode` | — | don't bias frames toward engineering |
+| `--deepen-mode M` | `idea` | `idea` deepens the top-K ranked ideas; `cluster` ranks clusters instead and re-diverges inside the top-K clusters for implementation variants |
 | `--json` | — | emit machine-readable `RunResult` |
 | `--quiet` | — | suppress progress events |
 
@@ -47,6 +48,7 @@ type RunOptions = {
   topK?: number;           // default 3
   concurrency?: number;    // default 4
   codeMode?: boolean;      // default true
+  deepenMode?: "idea" | "cluster"; // default "idea"
   model?: string;          // generator + critic
   criticModel?: string;    // critic (score + cluster) only; defaults to `model`
   onEvent?: (e: RunEvent) => void;

@@ -19,6 +19,7 @@ type Flags = {
   top?: number;
   concurrency?: number;
   codeMode: boolean;
+  deepenMode: "idea" | "cluster";
   json: boolean;
   quiet: boolean;
   model?: string;
@@ -41,7 +42,7 @@ function positiveInt(raw: string, flag: string, max: number): number {
 const MAX_CONTEXT_BYTES = 10 * 1024 * 1024; // 10 MB
 
 function parse(argv: string[]): Flags {
-  const f: Flags = { problem: "", codeMode: true, json: false, quiet: false };
+  const f: Flags = { problem: "", codeMode: true, deepenMode: "idea", json: false, quiet: false };
   const rest: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -63,6 +64,15 @@ function parse(argv: string[]): Flags {
       case "--model": f.model = argv[++i]; break;
       case "--critic-model": f.criticModel = argv[++i]; break;
       case "--no-code-mode": f.codeMode = false; break;
+      case "--deepen-mode": {
+        const v = argv[++i];
+        if (v !== "idea" && v !== "cluster") {
+          console.error(`Error: --deepen-mode must be "idea" or "cluster", got "${v}"`);
+          process.exit(1);
+        }
+        f.deepenMode = v;
+        break;
+      }
       case "--json": f.json = true; break;
       case "--quiet": f.quiet = true; break;
       case "-h":
@@ -98,6 +108,9 @@ FLAGS
   --critic-model N  override the model for the critic passes only
                     (score + cluster); decorrelates critic errors
   --no-code-mode    don't bias frames toward engineering
+  --deepen-mode M   "idea" (default) deepens the top-K ranked ideas;
+                    "cluster" ranks clusters instead and re-diverges inside
+                    the top-K clusters for implementation variants
   --json            emit RunResult as JSON
   --quiet           suppress progress events
   -h, --help
@@ -132,6 +145,7 @@ async function main() {
     topK: flags.top,
     concurrency: flags.concurrency,
     codeMode: flags.codeMode,
+    deepenMode: flags.deepenMode,
     model: flags.model,
     criticModel: flags.criticModel,
     onEvent,
