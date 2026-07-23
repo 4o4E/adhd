@@ -12,6 +12,10 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](./documentation/install.md)
 [![Paper](https://img.shields.io/badge/paper-preprint-blueviolet)](https://adhdstack.github.io/)
 [![Featured: The New Stack](https://img.shields.io/badge/featured-The%20New%20Stack-ff5500)](https://thenewstack.io/claude-code-adhd/)
+[![Discord](https://img.shields.io/badge/Discord-Join%20the%20chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/NbWwkwwGw)
+
+> ### 🎮 [**Join the ADHD Discord →**](https://discord.gg/NbWwkwwGw)
+> This is where the real-time thinking happens: frame design, eval problems, trap-hunting, and neurodivergence-inspired research on reasoning architectures. If you've got opinions on premature convergence, cognitive frames, or just want to argue about the next eval problem — **[come argue with us live](https://discord.gg/NbWwkwwGw).**
 
 > 👉 [**Join the ADHD community →**](https://tally.so/r/WO1Nzj) as a contributor, maintainer, early adopter, or just a member. One short form. We coordinate frame contributions, eval problems, integrations, and adopter onboarding there.
 
