@@ -14,6 +14,8 @@
 [![Featured: The New Stack](https://img.shields.io/badge/featured-The%20New%20Stack-ff5500)](https://thenewstack.io/claude-code-adhd/)
 [![Discord](https://img.shields.io/badge/Discord-Join%20the%20chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/NbWwkwwGw)
 
+<a href="https://trendshift.io/repositories/39300?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-39300" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/39300/daily?language=TypeScript" alt="UditAkhourii%2Fadhd | Trendshift" width="250" height="55"/></a>
+
 > ### 🎮 [**Join the ADHD Discord →**](https://discord.gg/NbWwkwwGw)
 > This is where the real-time thinking happens: frame design, eval problems, trap-hunting, and neurodivergence-inspired research on reasoning architectures. If you've got opinions on premature convergence, cognitive frames, or just want to argue about the next eval problem — **[come argue with us live](https://discord.gg/NbWwkwwGw).**
 
