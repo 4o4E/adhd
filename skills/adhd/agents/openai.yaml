@@ -1,0 +1,7 @@
+interface:
+  display_name: "ADHD"
+  short_description: "Spark-powered divergent ideation with focused review"
+  default_prompt: "Use $adhd to explore this problem through isolated Spark candidate branches, then review and converge with the parent model."
+
+policy:
+  allow_implicit_invocation: false

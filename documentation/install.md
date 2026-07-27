@@ -2,25 +2,30 @@
 
 [← back to README](../README.md)
 
-ADHD ships three ways: as an **agent skill** (works in Claude Code, Cursor, Antigravity, Codex, and ~50 more), as a **CLI**, and as a **Node/TS library**.
+ADHD ships three ways: as an **agent skill**, as a **CLI**, and as a **Node/TS
+library**. In this `4o4E/adhd` fork, the skill is customized for Codex: Spark
+generates candidates and the current parent model reviews them. The CLI and
+library remain the upstream Claude Agent SDK implementation.
 
 ## One command, every agent
 
 ```bash
-npx skills add UditAkhourii/adhd
+npx skills add 4o4E/adhd
 ```
 
 The [`skills`](https://github.com/vercel-labs/skills) CLI detects which agent you are using and drops [`skills/adhd/SKILL.md`](../skills/adhd/SKILL.md) into the right place. Supports **Claude Code, Claude.ai, Antigravity, Cursor, Codex, Cline, Continue, Aider, Gemini CLI, Windsurf, Cody, Roo, Augment, OpenCode, Kilo, Kimi, Qwen, Trae, Replit, Warp**, and ~40 more.
 
-Restart your agent. The skill auto-triggers on brainstorm, ideate, design, naming, refactor, and "give me a few ways to" intents. Or invoke it explicitly: `/adhd "design a rate limiter that survives a leader election"`.
+Restart Codex and invoke the skill explicitly:
+`/adhd "design a rate limiter that survives a leader election"`. This fork
+disables implicit invocation because each run starts several model sessions.
 
 Useful flags:
 
 ```bash
-npx skills add UditAkhourii/adhd -g            # install globally instead of per-project
-npx skills add UditAkhourii/adhd -a claude-code -a cursor   # target specific agents
-npx skills add UditAkhourii/adhd --copy        # copy files instead of symlinking
-npx skills add UditAkhourii/adhd --list        # see what skills the repo offers
+npx skills add 4o4E/adhd -g            # install globally instead of per-project
+npx skills add 4o4E/adhd -a codex      # target Codex
+npx skills add 4o4E/adhd --copy        # copy files instead of symlinking
+npx skills add 4o4E/adhd --list        # see what skills the repo offers
 ```
 
 ## Codex (OpenAI)
@@ -28,18 +33,20 @@ npx skills add UditAkhourii/adhd --list        # see what skills the repo offers
 If the universal command auto-detects Codex correctly, you are done. Some Codex builds have stricter skill-discovery rules — force the target and install globally if you hit trouble:
 
 ```bash
-npx skills add UditAkhourii/adhd -a codex -g
+npx skills add 4o4E/adhd -a codex -g
 ```
 
-Or install manually into Codex's skills directory:
+Install the complete skill directory because the Spark runner is required:
 
 ```bash
-mkdir -p ~/.codex/skills/adhd
-curl -fsSL https://raw.githubusercontent.com/UditAkhourii/adhd/main/skills/adhd/SKILL.md \
-  -o ~/.codex/skills/adhd/SKILL.md
+git clone --depth 1 --filter=blob:none --sparse https://github.com/4o4E/adhd.git /tmp/adhd-skill
+git -C /tmp/adhd-skill sparse-checkout set skills/adhd
+mkdir -p ~/.codex/skills
+cp -R /tmp/adhd-skill/skills/adhd ~/.codex/skills/adhd
 ```
 
-Restart Codex. Invoke with `/adhd "your problem"`.
+Restart Codex. Invoke with `/adhd "your problem"`. Python 3, the `codex` CLI,
+and access to `gpt-5.3-codex-spark` are required.
 
 **Note on description length:** the ADHD `SKILL.md` ships with a single-line description (≤600 chars) specifically because some Codex builds truncate or fail on multi-line YAML block-scalar descriptions. The full pre-flight gate logic lives in the body of the skill rather than the frontmatter for this reason. If you ever author your own skill and Codex refuses to load it, this is the first thing to check.
 

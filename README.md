@@ -6,6 +6,13 @@
 
 # ADHD — a skill for agents
 
+> [!NOTE]
+> This `4o4E/adhd` fork customizes the Codex skill while preserving the
+> upstream method and attribution. Phase 1 candidate branches run on
+> `gpt-5.3-codex-spark`; the current parent model performs review and
+> convergence. The npm CLI remains the upstream Claude Agent SDK
+> implementation and does not use the Spark runner.
+
 [![CI](https://github.com/UditAkhourii/adhd/actions/workflows/ci.yml/badge.svg)](https://github.com/UditAkhourii/adhd/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/adhd-agent.svg)](https://www.npmjs.com/package/adhd-agent)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
@@ -119,28 +126,33 @@ Shipping ADHD in your project? Open a PR adding it here, or [open an issue](http
 One command, auto-detects your agent (Claude Code, Cursor, Antigravity, Codex, Cline, Gemini CLI, Windsurf, and ~50 more):
 
 ```bash
-npx skills add UditAkhourii/adhd
+npx skills add 4o4E/adhd
 ```
 
-Then invoke explicitly with `/adhd "your problem"`, or let it auto-trigger on ideation intents.
+Then invoke explicitly with `/adhd "your problem"` or `$adhd`. This fork
+disables implicit invocation because each run starts several model sessions.
 
 ### Codex quick path
 
 If the universal command above fails to register inside Codex (some Codex builds discover skills from a specific path), force the target:
 
 ```bash
-npx skills add UditAkhourii/adhd -a codex -g
+npx skills add 4o4E/adhd -a codex -g
 ```
 
-Or install manually into Codex's skills directory:
+Install the complete `skills/adhd` directory, not only `SKILL.md`: the Codex
+adaptation also needs the bundled Spark runner.
 
 ```bash
-mkdir -p ~/.codex/skills/adhd
-curl -fsSL https://raw.githubusercontent.com/UditAkhourii/adhd/main/skills/adhd/SKILL.md \
-  -o ~/.codex/skills/adhd/SKILL.md
+git clone --depth 1 --filter=blob:none --sparse https://github.com/4o4E/adhd.git /tmp/adhd-skill
+git -C /tmp/adhd-skill sparse-checkout set skills/adhd
+mkdir -p ~/.codex/skills
+cp -R /tmp/adhd-skill/skills/adhd ~/.codex/skills/adhd
 ```
 
-Restart Codex. `/adhd "design a rate limiter"` should now route through the skill. The skill ships with a single-line description (≤600 chars) specifically because some Codex builds truncate or reject multi-line YAML block descriptions.
+Restart Codex. `/adhd "design a rate limiter"` should now route through the
+skill. Python 3, the `codex` CLI, and access to `gpt-5.3-codex-spark` are
+required.
 
 CLI and library installs, manual curl for other agents, and per-platform paths are in **[documentation/install.md](./documentation/install.md)**.
 
